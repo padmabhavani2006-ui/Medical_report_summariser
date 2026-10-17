@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MEDExplain AI - Medical Report Explanation Assistant{% endblock %}</title>
+    <meta name="description" content="Understand your medical reports in simple language. Upload PDF, image, or text reports and receive clear doctor-style explanations.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <a href="{{ url_for('index') if not session.user else url_for('dashboard') }}" class="brand-logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                <span class="brand-name">MEDExplain <span class="brand-badge">AI</span></span>
+            </a>
+
+            <nav class="app-nav">
+                {% if session.user %}
+                    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
+                    <a href="{{ url_for('history_page') }}" class="nav-link {% if request.endpoint == 'history_page' %}active{% endif %}">My Reports</a>
+                    <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">About & Safety</a>
+
+                    <div class="user-menu-dropdown">
+                        <button class="user-profile-btn" id="userMenuToggle" aria-label="User Profile">
+                            <span class="avatar-circle">
+                                {% if session.user.photo %}
+                                    <img src="{{ session.user.photo }}" alt="{{ session.user.name }}" class="avatar-img">
+                                {% else %}
+                                    {{ session.user.name[0] | upper }}
+                                {% endif %}
+                            </span>
+                            <span class="user-name-short">{{ session.user.name.split()[0] }}</span>
+                            <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+
+                        <div class="dropdown-popover" id="userPopover">
+                            <div class="user-popover-header">
+                                <p class="popover-name">{{ session.user.name }}</p>
+                                <p class="popover-email">{{ session.user.email }}</p>
+                            </div>
+                            <div class="popover-divider"></div>
+                            <a href="{{ url_for('profile') }}" class="popover-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                                Profile & Settings
+                            </a>
+                            <a href="{{ url_for('history_page') }}" class="popover-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                My Report History
+                            </a>
+                            <div class="popover-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="popover-item text-danger">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">Sign In</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary btn-sm">Get Started</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Flash Messages Container -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-alert flash-{{ category }}">
+                        <span class="flash-message">{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-disclaimer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="disclaimer-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p><strong>Medical Disclaimer:</strong> MEDExplain AI is an educational information tool and does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider regarding your medical condition.</p>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MEDExplain AI. Educational Health Information Assistant.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

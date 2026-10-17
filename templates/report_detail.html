@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report.title }} - Explanation{% endblock %}
+
+{% block content %}
+<!-- Report Navigation Bar -->
+<div class="report-header">
+    <div class="report-title-group">
+        <a href="{{ url_for('dashboard') }}" style="font-size: 0.85rem; font-weight: 600;">← Back to Dashboard</a>
+        <h1 style="margin-top: 4px;">{{ report.title }}</h1>
+        <div class="report-meta">
+            <span>📅 {{ report.created_at[:10] }}</span>
+            <span>🌐 Explained in: <strong>{{ lang_name }}</strong></span>
+            <span>📋 Type: {{ report.report_type or 'Medical Report' }}</span>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <!-- Audio Readout Button -->
+        <button id="btnPlayAudio" data-lang="{{ report.target_language }}" class="btn btn-secondary" style="width: auto;">
+            🎧 Listen Audio Summary
+        </button>
+
+        <!-- Export PDF -->
+        <a href="{{ url_for('export_pdf', report_id=report.id) }}" class="btn btn-primary" style="width: auto;">
+            📥 Export Doctor PDF Card
+        </a>
+    </div>
+</div>
+
+<!-- Quick Retranslate Header -->
+<div style="background: white; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <div style="font-weight: 600; color: var(--dark-slate);">
+        🌐 Change Explanation Language:
+    </div>
+    <form action="{{ url_for('retranslate_report', report_id=report.id) }}" method="POST" style="display: flex; gap: 8px; align-items: center;">
+        <select name="target_language" class="form-control" style="width: 220px; padding: 0.4rem 0.8rem;">
+            {% for code, name in languages.items() %}
+                <option value="{{ code }}" {% if code == report.target_language %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary" style="width: auto; padding: 0.45rem 1rem;">Translate Now</button>
+    </form>
+</div>
+
+<!-- Main Split Layout -->
+<div class="report-split-layout">
+    <!-- Left Side: AI Plain Language Explanation -->
+    <div>
+        <!-- Mode Switcher Buttons -->
+        <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+            <button id="tabShort" class="btn btn-primary" style="flex: 1;">⚡ 30-Sec Short Overview</button>
+            <button id="tabDetailed" class="btn btn-secondary" style="flex: 1;">📖 Detailed Section Breakdown</button>
+        </div>
+
+        <!-- Short Overview Section -->
+        <div id="sectionShort" class="card">
+            <h3 class="card-title">💡 30-Second Summary</h3>
+            <p id="summaryText" style="font-size: 1.05rem; color: var(--dark-slate); line-height: 1.7; background: var(--primary-light); padding: 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--primary);">
+                {{ report.short_summary }}
+            </p>
+        </div>
+
+        <!-- Detailed Breakdown Section -->
+        <div id="sectionDetailed" class="card" style="display: none;">
+            <h3 class="card-title">🔍 Comprehensive Analysis</h3>
+            <div style="line-height: 1.8; color: var(--slate-body); font-size: 0.95rem;">
+                {{ report.detailed_analysis | replace('### ', '<h4>') | replace('## ', '<h3>') | replace('* ', '• ') | safe }}
+            </div>
+        </div>
+
+        <!-- Lab Values & Traffic Light Alert System -->
+        {% if lab_values %}
+        <div class="card">
+            <h3 class="card-title">🧪 Key Lab Findings & Reference Ranges</h3>
+            <div style="overflow-x: auto;">
+                <table class="lab-table">
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Observed Value</th>
+                            <th>Reference Range</th>
+                            <th>Status</th>
+                            <th>Simple Meaning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in lab_values %}
+                            <tr>
+                                <td><strong>{{ item.test_name }}</strong></td>
+                                <td>{{ item.value }} {{ item.unit }}</td>
+                                <td>{{ item.reference_range }}</td>
+                                <td>
+                                    {% set st = item.status.lower() %}
+                                    {% if 'normal' in st %}
+                                        <span class="badge badge-normal">Normal</span>
+                                    {% elif 'borderline' in st %}
+                                        <span class="badge badge-borderline">Borderline</span>
+                                    {% else %}
+                                        <span class="badge badge-high">{{ item.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 0.85rem; color: var(--slate-body);">{{ item.explanation }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Medical Jargon Glossary -->
+        {% if glossary %}
+        <div class="card">
+            <h3 class="card-title">📚 Medical Terminology Dictionary</h3>
+            <div>
+                {% for item in glossary %}
+                    <div class="glossary-item">
+                        <strong>{{ item.term }}</strong>
+                        <p style="font-size: 0.9rem; margin-top: 2px;">{{ item.definition }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Side: Interactive Doubts Assistant & Original Text -->
+    <div>
+        <!-- Interactive Doubts Q&A Chat -->
+        <div class="card">
+            <h3 class="card-title">💬 Ask Doubts about your Medical Report</h3>
+            <p style="font-size: 0.85rem; color: var(--slate-muted); margin-bottom: 0.8rem;">
+                Have questions about your report findings? Ask our AI assistant in <strong>{{ lang_name }}</strong>!
+            </p>
+
+            <div class="chat-box">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-msg bot">
+                        Hello! I am your medical report assistant. What doubts or questions can I clarify about your report today?
+                    </div>
+                    {% for chat in chats %}
+                        <div class="chat-msg {{ chat.sender }}">
+                            {{ chat.message }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <form id="chatForm" data-report-id="{{ report.id }}" data-lang="{{ report.target_language }}" class="chat-input-area">
+                    <input type="text" id="chatInput" class="form-control" placeholder="Ask your doubt in {{ lang_name }}..." required>
+                    <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.6rem 1.2rem;">Send</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Original Report Text Accordion -->
+        <div class="card">
+            <h3 class="card-title">📜 Original Report Document</h3>
+            <div class="text-box">
+                {{ report.original_text }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

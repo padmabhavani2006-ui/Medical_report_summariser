@@ -1,0 +1,19 @@
+{
+  "name": "medexplain-ai",
+  "version": "1.0.0",
+  "description": "Generative AI Medical Report Explainer with Firebase Auth and Gemini AI",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py"
+  },
+  "keywords": [
+    "medical",
+    "ai",
+    "gemini",
+    "firebase-auth",
+    "healthcare",
+    "pdf-explainer"
+  ],
+  "author": "MEDexplain AI Team",
+  "license": "MIT"
+}

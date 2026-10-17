@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}My Report History - MEDExplain AI{% endblock %}
+
+{% block content %}
+<div class="history-page-container">
+    <header class="page-header-row">
+        <div>
+            <h1 class="page-title">My Report History</h1>
+            <p class="page-subtitle">Your private collection of past medical report explanations.</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-sm">+ Upload New Report</a>
+    </header>
+
+    <!-- Search & Filter Controls -->
+    <div class="history-controls-card">
+        <div class="search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="historySearchInput" class="search-input" placeholder="Search by report name or key findings...">
+        </div>
+
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label for="filterFileType" class="filter-label">File Type:</label>
+                <select id="filterFileType" class="form-select filter-select">
+                    <option value="all">All Formats</option>
+                    <option value="pdf">PDF</option>
+                    <option value="image">Image</option>
+                    <option value="text">Text</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filterLanguage" class="filter-label">Language:</label>
+                <select id="filterLanguage" class="form-select filter-select">
+                    <option value="all">All Languages</option>
+                    {% for code, lang_name in languages.items() %}
+                        <option value="{{ code }}">{{ lang_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Table / Grid -->
+    {% if history %}
+        <div class="history-list-grid" id="historyGrid">
+            {% for item in history %}
+                <div class="history-item-card" 
+                     data-filename="{{ item.filename | lower }}" 
+                     data-summary="{{ item.summary | lower }}" 
+                     data-type="{{ item.file_type or 'pdf' }}" 
+                     data-lang="{{ item.language or 'en' }}">
+                    <div class="item-card-top">
+                        <div class="item-badges">
+                            <span class="file-type-badge file-badge-{{ item.file_type or 'pdf' }}">
+                                {{ (item.file_type or 'pdf') | upper }}
+                            </span>
+                            <span class="lang-tag">{{ languages.get(item.language, item.language) }}</span>
+                        </div>
+                        <span class="item-date">{{ item.created_at[:10] }}</span>
+                    </div>
+
+                    <h3 class="item-title" title="{{ item.filename }}">{{ item.filename }}</h3>
+                    <p class="item-snippet">{{ item.summary | truncate(110) }}</p>
+
+                    <div class="item-card-actions">
+                        <a href="{{ url_for('view_result', report_id=item.id) }}" class="btn btn-outline btn-sm">View Explanation</a>
+                        <form action="{{ url_for('api_delete_history', report_id=item.id) }}" method="POST" onsubmit="return confirm('Delete this report from your history?');" class="delete-form">
+                            <button type="submit" class="btn-delete-icon" title="Delete report">&times;</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div id="noResultsMsg" class="empty-history-box hidden">
+            <p>No matching reports found for your filter criteria.</p>
+        </div>
+    {% else %}
+        <div class="empty-history-box">
+            <div class="empty-icon">📁</div>
+            <h2>No report history yet</h2>
+            <p>Reports you analyze will appear here. Each report is isolated and saved privately to your account.</p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="margin-top: 1rem;">Upload Your First Report</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('historySearchInput');
+        const filterFileType = document.getElementById('filterFileType');
+        const filterLanguage = document.getElementById('filterLanguage');
+        const historyItems = document.querySelectorAll('.history-item-card');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+
+        function filterReports() {
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const selectedType = filterFileType ? filterFileType.value : 'all';
+            const selectedLang = filterLanguage ? filterLanguage.value : 'all';
+            let visibleCount = 0;
+
+            historyItems.forEach(item => {
+                const filename = item.getAttribute('data-filename') || '';
+                const summary = item.getAttribute('data-summary') || '';
+                const fileType = item.getAttribute('data-type') || 'pdf';
+                const lang = item.getAttribute('data-lang') || 'en';
+
+                const matchesSearch = !query || filename.includes(query) || summary.includes(query);
+                const matchesType = selectedType === 'all' || fileType === selectedType;
+                const matchesLang = selectedLang === 'all' || lang === selectedLang;
+
+                if (matchesSearch && matchesType && matchesLang) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (noResultsMsg) {
+                if (visibleCount === 0 && historyItems.length > 0) {
+                    noResultsMsg.classList.remove('hidden');
+                } else {
+                    noResultsMsg.classList.add('hidden');
+                }
+            }
+        }
+
+        if (searchInput) searchInput.addEventListener('input', filterReports);
+        if (filterFileType) filterFileType.addEventListener('change', filterReports);
+        if (filterLanguage) filterLanguage.addEventListener('change', filterReports);
+    });
+</script>
+{% endblock %}

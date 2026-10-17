@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}MEDExplain AI - Understand Your Medical Reports Clearly{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+    <section class="hero-section">
+        <div class="hero-container">
+            <span class="hero-badge">Educational Health Assistant</span>
+            <h1 class="hero-title">Understand your medical reports in simple language.</h1>
+            <p class="hero-subtitle">
+                Upload a medical report, choose your preferred language, and get a clear explanation of the important information in your report.
+            </p>
+
+            <div class="hero-actions">
+                <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg">Get Started</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">Sign In</a>
+            </div>
+
+            <div class="supported-formats-strip">
+                <span>Supported Formats:</span>
+                <span class="format-pill">PDF Reports</span>
+                <span class="format-pill">JPG / PNG Images</span>
+                <span class="format-pill">Pasted Text</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works-section">
+        <div class="section-container">
+            <h2 class="section-title">How it works</h2>
+            <p class="section-subtitle">Three simple steps to understand your lab test results clearly.</p>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Upload your report</h3>
+                    <p class="step-desc">Drag & drop your PDF blood test, report image (JPG/PNG), or paste text directly.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Choose your language</h3>
+                    <p class="step-desc">Select your preferred language (English, Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali, Marathi).</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Understand the results</h3>
+                    <p class="step-desc">Receive a doctor-style explanation with clear reference ranges, simple term meanings, and questions for your doctor.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-overview">
+        <div class="section-container">
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="feature-icon">🧾</div>
+                    <h3>Doctor-Style Breakdown</h3>
+                    <p>Structured explanations organized by test findings, reference ranges, and practical simple terms.</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">🟢</div>
+                    <h3>Visual Lab Indicators</h3>
+                    <p>Clear visual badges indicating whether lab values are within range, elevated, or need attention.</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Multilingual Explanations</h3>
+                    <p>Read explanations in Indian regional languages while retaining accurate clinical test names and values.</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Isolated & Secure</h3>
+                    <p>Your uploaded reports and history are private to your account and immediately cleared from server temporary files.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="disclaimer-callout-section">
+        <div class="disclaimer-card">
+            <div class="disclaimer-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <h3>Important Safety Notice</h3>
+            </div>
+            <p>MEDExplain AI is an educational information tool and does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified physician or healthcare provider regarding any health questions or lab results.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}

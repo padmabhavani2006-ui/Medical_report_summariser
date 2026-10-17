@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Report Explanation - MEDExplain AI{% endblock %}
+
+{% block content %}
+<div class="result-page-container">
+    <!-- Top Action & Meta Bar -->
+    <div class="result-top-bar">
+        <a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+        <div class="report-meta-info">
+            <span class="meta-item"><strong>Report:</strong> {{ report.filename }}</span>
+            <span class="meta-item"><strong>Analyzed:</strong> {{ report.created_at[:10] }}</span>
+            <span class="meta-item"><strong>Language:</strong> {{ languages.get(report.language, report.language) }}</span>
+            <button onclick="window.print()" class="btn btn-outline btn-sm print-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Print Explanation
+            </button>
+        </div>
+    </div>
+
+    <!-- Educational Non-Diagnostic Safety Warning -->
+    <div class="result-safety-banner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="banner-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+            <strong>Educational Explanation Notice:</strong>
+            <p>{{ data.safety_note or "This explanation is for educational purposes only and is not a diagnosis. Please consult a qualified healthcare professional for medical advice." }}</p>
+        </div>
+    </div>
+
+    <!-- DOCTOR-STYLE STRUCTURED EXPLANATION -->
+    <div class="explanation-grid">
+        <!-- 1. What does this report say? -->
+        <div class="explanation-card summary-card">
+            <div class="card-section-header">
+                <h2>🧾 What does this report say?</h2>
+            </div>
+            <p class="summary-text">{{ data.summary }}</p>
+            <div class="score-badge-box">
+                <span class="score-label">Educational Comprehension Rating:</span>
+                <span class="score-pill">{{ data.understanding_score or 88 }}% Translated</span>
+            </div>
+        </div>
+
+        <!-- 2. Important Test Results -->
+        {% if data.important_findings %}
+            <div class="explanation-card findings-card">
+                <div class="card-section-header">
+                    <h2>🔬 Important test results</h2>
+                </div>
+                <ul class="findings-list">
+                    {% for finding in data.important_findings %}
+                        <li>{{ finding }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- 3. Status Categorizations (Normal, Attention, Critical) -->
+        {% if data.tests_normal or data.tests_attention or data.tests_critical %}
+            <div class="explanation-card categorized-results-card">
+                <div class="card-section-header">
+                    <h2>📊 Overview of Test Ranges</h2>
+                </div>
+
+                <div class="status-summary-grid">
+                    {% if data.tests_normal %}
+                        <div class="status-box status-box-normal">
+                            <h3>🟢 Within Reference Range</h3>
+                            <ul>
+                                {% for item in data.tests_normal %}
+                                    <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {% if data.tests_attention %}
+                        <div class="status-box status-box-attention">
+                            <h3>🟠 May Need Attention</h3>
+                            <ul>
+                                {% for item in data.tests_attention %}
+                                    <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {% if data.tests_critical %}
+                        <div class="status-box status-box-critical">
+                            <h3>🔴 Outside Reference Range</h3>
+                            <ul>
+                                {% for item in data.tests_critical %}
+                                    <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- 4. Detailed Visual Lab Values Table / Cards -->
+        {% if data.tests %}
+            <div class="explanation-card lab-values-card">
+                <div class="card-section-header">
+                    <h2>📋 Detailed Lab Parameter Breakdown</h2>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="lab-table">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Observed Value</th>
+                                <th>Reference Range</th>
+                                <th>Status</th>
+                                <th>Explanation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test in data.tests %}
+                                <tr>
+                                    <td class="test-name-cell"><strong>{{ test.name }}</strong></td>
+                                    <td class="test-val-cell">{{ test.value }} <small>{{ test.unit }}</small></td>
+                                    <td class="test-ref-cell">{{ test.reference_range }}</td>
+                                    <td class="test-status-cell">
+                                        <span class="status-indicator status-indicator-{{ test.status_code or 'normal' }}">
+                                            {% if test.status_code == 'normal' %}🟢 Normal
+                                            {% elif test.status_code == 'attention' %}🟠 Attention
+                                            {% elif test.status_code == 'high' %}🔴 High / Above Range
+                                            {% elif test.status_code == 'low' %}🔴 Low / Below Range
+                                            {% else %}🔵 {{ test.status }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="test-expl-cell">{{ test.simple_explanation }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- 5. What does this mean in simple words? -->
+        {% if data.simple_explanation %}
+            <div class="explanation-card simple-meaning-card">
+                <div class="card-section-header">
+                    <h2>💡 What does this mean in simple words?</h2>
+                </div>
+                <p class="meaning-text">{{ data.simple_explanation }}</p>
+            </div>
+        {% endif %}
+
+        <!-- 6. Glossary of Medical Terms -->
+        {% if data.medical_terms %}
+            <div class="explanation-card glossary-card">
+                <div class="card-section-header">
+                    <h2>📖 Medical Terminology Glossary</h2>
+                </div>
+                <div class="terms-grid">
+                    {% for term in data.medical_terms %}
+                        <div class="term-box">
+                            <h4 class="term-title">{{ term.term }}</h4>
+                            <p><strong>Simple Meaning:</strong> {{ term.simple_meaning }}</p>
+                            {% if term.technical_meaning %}
+                                <p class="term-tech"><small>Clinical Definition: {{ term.technical_meaning }}</small></p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- 7. What should I discuss with my doctor? -->
+        {% if data.doctor_discussion %}
+            <div class="explanation-card discussion-card">
+                <div class="card-section-header">
+                    <h2>👨‍⚕️ What should I discuss with my doctor?</h2>
+                </div>
+                <p>{{ data.doctor_discussion }}</p>
+            </div>
+        {% endif %}
+
+        <!-- 8. When should I seek medical attention? -->
+        {% if data.red_flags %}
+            <div class="explanation-card redflags-card">
+                <div class="card-section-header">
+                    <h2>⚠️ When should I seek medical attention?</h2>
+                </div>
+                <p>{{ data.red_flags }}</p>
+            </div>
+        {% endif %}
+
+        <!-- 9. Questions you can ask your doctor -->
+        {% if data.questions_for_doctor %}
+            <div class="explanation-card questions-card">
+                <div class="card-section-header">
+                    <h2>📋 Questions you can ask your doctor</h2>
+                </div>
+                <ul class="questions-list">
+                    {% for q in data.questions_for_doctor %}
+                        <li>"{{ q }}"</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="result-bottom-actions">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Analyze Another Report</a>
+        <a href="{{ url_for('history_page') }}" class="btn btn-outline">View All My Reports</a>
+    </div>
+</div>
+{% endblock %}
